@@ -1,0 +1,96 @@
+* Thymeleaf 
+
+<<<SCREEN>>>
+
+	->Login page 
+		-> Student
+		-> tutor/advisor
+		-> Hod
+		-> admin/office
+	
+	->Student 
+		-> student profile
+		-> request ( OD, bonafide, leave form, IV / Intenship , OutPass , Late permission , Lend documents ).
+		-> reason. 
+		-> Quick Track.
+		-> download invoices [ if approves ]
+	
+	->Tutor / Advisor
+		-> Tutor/ advisor profile
+		-> Accept / Reject student requests.
+			->Accept - forward to HOD 
+			-> reject (invalid reason)
+	
+	-> HOD 
+		-> HOD profile
+		-> Accept / Reject student request from their (Tutor / Advisor)
+			
+			-> If the reason is to get [ bonafied, IV/Intenship, Lend documents] - 	forward to office.
+			
+	-> admin/office 
+		
+		-> admin / office
+		-> Accept / Reject student request from their (HOD) for the only reason is to get [ bonafied, IV/Intenship, Lend documents]
+			-> Accept means 
+				-> generating student invoice 
+				-> approving student invoice to get them download.
+
+
+
+
+<<<MAPPING>>>
+	
+	->USER
+		user_id (PK)
+		username
+		password
+		role            -- STUDENT, TUTOR, HOD, ADMIN
+		name
+		email
+		department
+		active
+
+	->STUDENT
+		student_id (PK)
+		register_number
+		year
+		section
+		user_id (FK → USER.user_id)
+		tutor_id (FK → USER.user_id)
+
+	->STUDENT_REQUEST
+		request_id (PK)
+		request_type       -- OD, BONAFIDE, LEAVE, IV, OUTPASS, LATE, LEND_DOC
+		reason
+		status             -- SUBMITTED, TUTOR_APPROVED, HOD_APPROVED, ADMIN_APPROVED, REJECTED
+		created_at
+		updated_at
+
+		student_id (FK → STUDENT.student_id)
+
+	->REQUEST_APPROVAL
+		approval_id (PK)
+		request_id (FK → STUDENT_REQUEST.request_id)
+		approved_by (FK → USER.user_id)
+		role            -- TUTOR / HOD / ADMIN
+		action          -- APPROVED / REJECTED
+		remark
+		action_date
+
+
+	->QUICK TRACK (STATUS VIEW)
+	  QUICK TRACK SCREEN
+
+		Users:
+
+		STUDENT_REQUEST.status
+		REQUEST_APPROVAL.action_date
+
+		Example:
+
+		SELECT r.status, a.role, a.action_date
+		FROM STUDENT_REQUEST r
+		LEFT JOIN REQUEST_APPROVAL a
+		ON r.request_id = a.request_id
+		WHERE r.student_id = :studentId;
+

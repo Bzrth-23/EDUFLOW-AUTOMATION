@@ -1,0 +1,10 @@
+Backend Terminal:
+
+bash
+cd d:\MY_projects\EduFlow
+.\mvnw spring-boot:run
+Frontend Terminal:
+
+bash
+cd d:\MY_projects\EduFlow-Frontend
+npm start

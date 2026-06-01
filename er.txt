@@ -1,0 +1,136 @@
+-- ============================================
+-- EduFlow : Student Request & Approval System
+-- Full Database Schema (Single File)
+-- ============================================
+
+-- 1. Create Database
+CREATE DATABASE IF NOT EXISTS eduflow_db;
+USE eduflow_db;
+
+-- ============================================
+-- 2. USER TABLE
+-- Handles login for Student, Tutor, HOD, Admin
+-- ============================================
+
+CREATE TABLE user (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('STUDENT', 'TUTOR', 'HOD', 'ADMIN') NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    department VARCHAR(100),
+    active BOOLEAN DEFAULT TRUE
+);
+
+-- ============================================
+-- 3. STUDENT TABLE
+-- Links student with user and assigned tutor
+-- ============================================
+
+CREATE TABLE student (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    register_number VARCHAR(20) UNIQUE NOT NULL,
+    year INT,
+    section VARCHAR(10),
+
+    user_id INT NOT NULL,
+    tutor_id INT NOT NULL,
+
+    CONSTRAINT fk_student_user
+        FOREIGN KEY (user_id)
+        REFERENCES user(user_id),
+
+    CONSTRAINT fk_student_tutor
+        FOREIGN KEY (tutor_id)
+        REFERENCES user(user_id)
+);
+
+-- ============================================
+-- 4. STUDENT REQUEST TABLE
+-- Stores all academic requests
+-- ============================================
+
+CREATE TABLE student_request (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    request_type ENUM(
+        'OD',
+        'BONAFIDE',
+        'LEAVE',
+        'IV',
+        'OUTPASS',
+        'LATE',
+        'LEND_DOCUMENT'
+    ) NOT NULL,
+
+    reason TEXT NOT NULL,
+
+    status ENUM(
+        'SUBMITTED',
+        'TUTOR_APPROVED',
+        'HOD_APPROVED',
+        'ADMIN_APPROVED',
+        'REJECTED'
+    ) DEFAULT 'SUBMITTED',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    student_id INT NOT NULL,
+
+    CONSTRAINT fk_request_student
+        FOREIGN KEY (student_id)
+        REFERENCES student(student_id)
+);
+
+-- ============================================
+-- 5. REQUEST APPROVAL TABLE
+-- Tracks Tutor, HOD, Admin decisions
+-- ============================================
+
+CREATE TABLE request_approval (
+    approval_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    request_id INT NOT NULL,
+    approved_by INT NOT NULL,
+
+    role ENUM('TUTOR', 'HOD', 'ADMIN') NOT NULL,
+    action ENUM('APPROVED', 'REJECTED') NOT NULL,
+
+    remark VARCHAR(255),
+    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_approval_request
+        FOREIGN KEY (request_id)
+        REFERENCES student_request(request_id),
+
+    CONSTRAINT fk_approval_user
+        FOREIGN KEY (approved_by)
+        REFERENCES user(user_id)
+);
+
+-- ============================================
+-- 6. INVOICE TABLE
+-- Generated only by Admin / Office
+-- ============================================
+
+CREATE TABLE invoice (
+    invoice_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    request_id INT UNIQUE NOT NULL,
+    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+
+    generated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    file_path VARCHAR(255),
+    approved BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT fk_invoice_request
+        FOREIGN KEY (request_id)
+        REFERENCES student_request(request_id)
+);
+
+-- ============================================
+-- END OF EduFlow DATABASE SCHEMA
+-- ============================================
